@@ -22,7 +22,7 @@ interface CustomRequest extends Request {
 /**
  * @desc Get users with a specific skill
  * @route GET /api/skills/users?skillName=skillname
- * @access public
+ * @access private
  */
 const getSkilledUsers = asyncHandler(async (req: CustomRequest, res) => {
     const skillName = req.query.skillName as string;
@@ -35,7 +35,7 @@ const getSkilledUsers = asyncHandler(async (req: CustomRequest, res) => {
     }
 
     const skill = await SkillModel.findOne({ name: skillName });
-    
+
     if (!skill) {
         res.status(404).json({
             error: "Skill not found"
@@ -43,10 +43,23 @@ const getSkilledUsers = asyncHandler(async (req: CustomRequest, res) => {
         return;
     }
 
+    const currentUsername: string | undefined = req.user?.username;
+    const filteredUsers = skill.usersHaving.filter(
+        (username: string) => username !== currentUsername
+    );
+
     res.status(200).json({
-        users: skill
+        users: {
+            usersHaving: filteredUsers,
+            name: skill.name
+        }
     });
 });
+
+
+
+
+
 
 /**
  * @desc Add a skill to the current user
@@ -55,78 +68,34 @@ const getSkilledUsers = asyncHandler(async (req: CustomRequest, res) => {
  */
 const addSkill = asyncHandler(async (req: CustomRequest, res) => {
     const { skillName } = req.body;
-    const username = req.user?.username;
-
-    if (!skillName || !username) {
-        res.status(400).json({ error: "Skill name and user required" });
-        return;
+    const user = req.user;
+  
+    if (!skillName || !user?.username) {
+      res.status(400).json({ error: "Skill name and user required" });
+      return;
     }
-
+  
     let skill = await SkillModel.findOne({ name: skillName });
-
+  
     if (!skill) {
-        skill = new SkillModel({ name: skillName, usersHaving: [username] });
-    } else if (!skill.usersHaving.includes(username)) {
-        skill.usersHaving.push(username);
+      skill = new SkillModel({ name: skillName, usersHaving: [user.username] });
+    } else if (!skill.usersHaving.includes(user.username)) {
+      skill.usersHaving.push(user.username);
     }
     await skill.save();
-
-    // saving skill in user db
-    let user = await UserSchema.findOne({ username });
-    if (!user) {
-        res.status(400).json({
-            error: "User not found"
-        });
-        return;
-    }
-
+  
     if (!user.skillshave.includes(skillName)) {
-        user.skillshave.push(skillName);
+      user.skillshave.push(skillName);
     }
-    await user.save();
+  
+    await user.save(); // This updates DB
+  
+    res.status(200).json({ skill, user }); // req.user now has full, updated info
+  });
+  
 
-    res.status(200).json({ skill, user });
-});
 
-/**
- * @desc Express interest in learning a skill
- * @route POST /api/skills/want
- * @access private
- */
-const wantSkill = asyncHandler(async (req: CustomRequest, res) => {
-    const { skillName } = req.body;
-    const username = req.user?.username;
 
-    if (!skillName || !username) {
-        res.status(400).json({ error: "Skill name and user required" });
-        return;
-    }
-
-    let skill = await SkillModel.findOne({ name: skillName });
-
-    if (!skill) {
-        skill = new SkillModel({ name: skillName, usersWantToLearn: [username] });
-    } else if (!skill.usersWantToLearn.includes(username)) {
-        skill.usersWantToLearn.push(username);
-    }
-    await skill.save();
-
-    // Also update the user's wanted skills
-    let user = await UserSchema.findOne({ username });
-    if (!user) {
-        res.status(400).json({
-            error: "User not found"
-        });
-        return;
-    }
-
-    if (!user.skillswant.includes(skillName)) {
-        user.skillswant.push(skillName);
-    }
-    await user.save();
-
-    res.status(200).json({ skill, user });
-});
 
 /**
  * @desc Remove a skill from the current user
@@ -134,6 +103,9 @@ const wantSkill = asyncHandler(async (req: CustomRequest, res) => {
  * @access private
  */
 const removeSkill = asyncHandler(async (req: CustomRequest, res) => {
+    // {
+    //  skillName: ....
+    // }
     const { skillName } = req.body;
     const username = req.user?.username;
 
@@ -163,55 +135,124 @@ const removeSkill = asyncHandler(async (req: CustomRequest, res) => {
     user.skillshave = user.skillshave.filter(s => s !== skillName);
     await user.save();
 
+    req.user = user;
+
     res.status(200).json({
         message: "Skill removed successfully"
     });
 });
 
+
+
+
 /**
- * @desc Remove a wanted skill from the current user
- * @route DELETE /api/skills/unwant
+ * @desc make request to other user's for teaching skills
+ * @route POST /api/skills/make_request
  * @access private
  */
-const removeSkillWanted = asyncHandler(async (req: CustomRequest, res) => {
-    const { skillName } = req.body;
+const makeRequest = asyncHandler(async (req: CustomRequest, res) => {
+    const { to_user, skillName } = req.body;
     const username = req.user?.username;
 
-    if (!skillName || !username) {
-        res.status(400).json({
-            error: "Skill name is required"
-        });
+    if (!skillName || !username || !to_user) {
+        res.status(400).json({ error: "skillName and to_user are required" });
         return;
     }
 
-    // Find the user and skill documents
-    let user = await UserSchema.findOne({ username });
-    let skill = await SkillModel.findOne({ name: skillName });
+    const sender = await UserSchema.findOne({ username });
+    const receiver = await UserSchema.findOne({ username: to_user });
+    const skill = await SkillModel.findOne({ name: skillName });
 
-    if (!user || !skill) {
-        res.status(404).json({
-            error: "User or skill not found"
-        });
+    if (!sender || !receiver || !skill) {
+        res.status(404).json({ error: "Sender, receiver, or skill not found" });
         return;
     }
 
-    // Remove the username from the skill's usersWantToLearn array
-    skill.usersWantToLearn = skill.usersWantToLearn.filter((user: string) => user !== username);
-    await skill.save();
+    const requestObj = {
+        user: to_user,
+        skill: skillName,
+        status: 'p',
+        type: 's'
+    };
 
-    // Remove the skill from the user's skillswant array
-    user.skillswant = user.skillswant.filter(s => s !== skillName);
-    await user.save();
+    const receiverRequestObj = {
+        user: username,
+        skill: skillName,
+        status: 'p',
+        type: 'r'
+    };
 
-    res.status(200).json({
-        message: "Skill removed from wishlist successfully"
-    });
+    if (!sender.requests.some(req => req.user === to_user && req.skill === skillName && req.type === 's')) {
+        sender.requests.push(requestObj);
+    }
+    if (!receiver.requests.some(req => req.user === username && req.skill === skillName && req.type === 'r')) {
+        receiver.requests.push(receiverRequestObj);
+    }
+
+    await sender.save();
+    await receiver.save();
+    req.user = sender;
+
+    res.status(200).json({ message: "Request sent successfully" });
 });
+
+
+
+
+
+/**
+ * @desc answer requests in the inbox
+ * @route POST /api/skills/answer_request
+ * @access private
+ */
+const answerRequest = asyncHandler(async (req: CustomRequest, res) => {
+    const { from_user, skillName, decision } = req.body; // decision: 'a' or 'r'
+    const username = req.user?.username;
+
+    if (!from_user || !skillName || !['a', 'r'].includes(decision)) {
+        res.status(400).json({ error: "Invalid request parameters" });
+        return;
+    }
+
+    const receiver = await UserSchema.findOne({ username });
+    const sender = await UserSchema.findOne({ username: from_user });
+
+    if (!receiver || !sender) {
+        res.status(404).json({ error: "Sender or receiver not found" });
+        return;
+    }
+
+    // Update status in receiver (type 'r')
+    receiver.requests = receiver.requests.map(req => {
+        if (req.user === from_user && req.skill === skillName && req.type === 'r') {
+            return { ...req, status: decision };
+        }
+        return req;
+    });
+
+    // Update status in sender (type 's')
+    sender.requests = sender.requests.map(req => {
+        if (req.user === username && req.skill === skillName && req.type === 's') {
+            return { ...req, status: decision };
+        }
+        return req;
+    });
+
+    await receiver.save();
+    await sender.save();
+    req.user = receiver;
+
+    res.status(200).json({ message: `Request ${decision === 'a' ? 'accepted' : 'rejected'}` });
+});
+
+
+
+
 
 export default {
     getSkilledUsers,
     addSkill,
-    wantSkill,
     removeSkill,
-    removeSkillWanted
+    makeRequest,
+    answerRequest
 };

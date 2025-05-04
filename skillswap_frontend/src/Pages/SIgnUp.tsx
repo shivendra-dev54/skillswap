@@ -1,6 +1,8 @@
 import React from "react";
+import { useNavigate } from "react-router";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   
   const formSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -10,7 +12,7 @@ const SignUp = () => {
     const password = formData.get("password");
 
     // Replace with your API endpoint
-    fetch("/api/SignUp", {
+    fetch("http://localhost:64000/api/auth/sign_up", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -26,10 +28,13 @@ const SignUp = () => {
       .then((data) => {
         console.log("Sign up successful:", data);
         // Handle successful sign-in (e.g., redirect, save token)
+        alert("created account successfully");
+        navigate("/signin");
+        
       })
       .catch((error) => {
         console.error("Error SignUp:", error);
-        // Handle error (e.g., show error message)
+        alert("Unable to log in");
       });
   }
 

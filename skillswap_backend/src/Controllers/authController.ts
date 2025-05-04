@@ -89,6 +89,7 @@ const signIn = asyncHandler(async (_req, res) => {
         username: user.username,
         email: user.email,
         passwoprd: user.password,
+        skills: user.skillshave,
     },
     process.env.JWT_SECRET || 'your-secret-key', {
         expiresIn: '1h',

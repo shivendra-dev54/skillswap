@@ -14,7 +14,7 @@ const Homepage = () => {
         </p>
         
         <div className="w-full flex justify-end mt-20">
-          <Link to="/signin" className="p-3 pr-6 pl-6 mr-6 border-2 border-slate-700 rounded-full bg-slate-900 hover:bg-slate-950 hover:border-slate-600 cursor-pointer">Get started</Link>
+          <Link to="/signup" className="p-3 pr-6 pl-6 mr-6 border-2 border-slate-700 rounded-full bg-slate-900 hover:bg-slate-950 hover:border-slate-600 cursor-pointer">Get started</Link>
         </div>
       </div>
     );

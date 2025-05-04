@@ -4,8 +4,14 @@ interface User{
     username: string,
     email: string,
     password: string,
-    skillswant: string[],
     skillshave: string[],
+    requests: {
+        user: string,
+        skill: string,
+        type: string, // r - received or s - sent
+        status: string, // a - accepted || r - rejected || p - pending
+    }[],
+
 }
 
 const UserModel: Schema<User> = new mongoose.Schema({
@@ -21,13 +27,13 @@ const UserModel: Schema<User> = new mongoose.Schema({
         type: String,
         required: true
     },
-    skillswant: {
+    skillshave: {
         type: [String],
         required: true,
         default: []
     },
-    skillshave: {
-        type: [String],
+    requests: {
+        type: [{}],
         required: true,
         default: []
     },

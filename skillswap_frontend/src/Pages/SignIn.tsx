@@ -1,10 +1,14 @@
 import React from "react";
+import { useNavigate } from "react-router";
 
 interface SignInProps {
   setIsLoggedIn: (isLoggedIn: boolean) => void; // Update the type to accept a boolean
 }
 
 const SignIn: React.FC<SignInProps> = ({ setIsLoggedIn }) => {
+
+  const navigate = useNavigate();
+
   const formSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -12,7 +16,7 @@ const SignIn: React.FC<SignInProps> = ({ setIsLoggedIn }) => {
     const password = formData.get("password");
 
     // Replace with your API endpoint
-    fetch("/api/signin", {
+    fetch("http://localhost:64000/api/auth/sign_in", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -29,6 +33,8 @@ const SignIn: React.FC<SignInProps> = ({ setIsLoggedIn }) => {
         console.log("Sign in successful:", data);
         setIsLoggedIn(true); // Call setIsLoggedIn with true on successful sign-in
         // Handle additional logic (e.g., redirect, save token)
+        localStorage.setItem("authToken", data["token"]);
+        navigate("/main_page");
       })
       .catch((error) => {
         console.error("Error signing in:", error);

@@ -30,8 +30,8 @@ A web app where students can teach and learn from each other. For example, someo
 
 ```
 - Auth
-    - /api/auth/sign_up     // for login
-    - /api/auth/sign_in     // for registation of the new users
+    - /api/auth/sign_up     // for new account reg
+    - /api/auth/sign_in     // for login
     - /api/auth/current     // for info about logged in user
 
 - Skills

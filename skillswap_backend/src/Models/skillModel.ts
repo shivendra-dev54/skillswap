@@ -15,10 +15,6 @@ const SkillModel= new Schema<Skill>({
     usersHaving: { 
         type: [String], 
         default: [] 
-    },
-    usersWantToLearn: { 
-        type: [String], 
-        default: [] 
     }
 });
 
