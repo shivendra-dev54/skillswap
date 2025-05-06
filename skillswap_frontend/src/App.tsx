@@ -6,6 +6,7 @@ import SignUp from "./Pages/SIgnUp";
 import Navbar from "./Components/Navbar";
 import Mainpage from "./Pages/Mainpage";
 import Profile from "./Pages/Profile";
+import ChatPage from "./Pages/ChatPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -20,6 +21,7 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/main_page" element={<Mainpage isLoggedIn={isLoggedIn}/>} />
           <Route path="/profile" element={<Profile isLoggedIn={isLoggedIn}/>} />
+          <Route path="/chat/:username" element={<ChatPage isLoggedIn={isLoggedIn}/>} />
         </Routes>
       </div>
     </div>

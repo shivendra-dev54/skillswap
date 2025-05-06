@@ -30,7 +30,7 @@ const SignIn: React.FC<SignInProps> = ({ setIsLoggedIn }) => {
         return response.json();
       })
       .then((data) => {
-        console.log("Sign in successful:", data);
+        console.log("Sign in successful");
         setIsLoggedIn(true); // Call setIsLoggedIn with true on successful sign-in
         // Handle additional logic (e.g., redirect, save token)
         localStorage.setItem("authToken", data["token"]);

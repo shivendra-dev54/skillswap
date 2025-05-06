@@ -8,11 +8,11 @@ type RequestType = {
     type: "r" | "s";
 };
 
-interface ProfileProps{
+interface ProfileProps {
     isLoggedIn: boolean,
 };
 
-const Profile = ({isLoggedIn}: ProfileProps) => {
+const Profile = ({ isLoggedIn }: ProfileProps) => {
 
     let forReloadingInfo: number = 10;
 
@@ -153,8 +153,8 @@ const Profile = ({isLoggedIn}: ProfileProps) => {
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             },
             body: JSON.stringify({
-                "from_user": fromUser, 
-                "skillName": skill, 
+                "from_user": fromUser,
+                "skillName": skill,
                 "decision": decision
             })
         })
@@ -263,7 +263,17 @@ const Profile = ({isLoggedIn}: ProfileProps) => {
                                     </div>
                                 ) : (
                                     <span className={`text-sm ${req.status === "a" ? "text-green-400" : "text-red-400"}`}>
-                                        {req.status === "a" ? "Accepted" : "Rejected"}
+                                        {req.status === "a" ? (
+                                            <button
+                                                onClick={() => navigate(`/chat/${req.user}`)}
+                                                className="bg-blue-600 px-3 py-1 rounded hover:bg-blue-700 text-white"
+                                            >
+                                                Chat
+                                            </button>
+                                        ) : (
+                                            <span className="text-sm text-red-400">Rejected</span>
+                                        )}
+
                                     </span>
                                 )}
                             </li>
@@ -286,22 +296,25 @@ const Profile = ({isLoggedIn}: ProfileProps) => {
                                 <span>
                                     You requested <strong>{req.user}</strong> for <strong>{req.skill}</strong>
                                 </span>
-                                <span
-                                    className={`text-sm ${
-                                        req.status === "p"
-                                            ? "text-yellow-400"
-                                            : req.status === "a"
-                                            ? "text-green-400"
-                                            : "text-red-400"
-                                    }`}
-                                >
-                                    {req.status === "p"
-                                        ? "Pending"
-                                        : req.status === "a"
-                                        ? "Accepted"
-                                        : "Rejected"}
-                                </span>
+                                {req.status === "a" ? (
+                                    <button
+                                        onClick={() => navigate(`/chat/${req.user}`)}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                                    >
+                                        Chat
+                                    </button>
+                                ) : (
+                                    <span
+                                        className={`text-sm ${req.status === "p"
+                                                ? "text-yellow-400"
+                                                : "text-red-400"
+                                            }`}
+                                    >
+                                        {req.status === "p" ? "Pending" : "Rejected"}
+                                    </span>
+                                )}
                             </li>
+
                         ))}
                     </ul>
                 )}

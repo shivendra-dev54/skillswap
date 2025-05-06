@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { Request } from "express";
 
 
-//@desc POST add new expense
+//@desc POST create new user
 //@route /api/auth/sign_up
 //@access public
 const signUp = asyncHandler(async (_req, res) => {

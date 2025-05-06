@@ -90,7 +90,7 @@ const addSkill = asyncHandler(async (req: CustomRequest, res) => {
   
     await user.save(); // This updates DB
   
-    res.status(200).json({ skill, user }); // req.user now has full, updated info
+    res.status(201).json({ skill, user }); // req.user now has full, updated info
   });
   
 
@@ -137,7 +137,7 @@ const removeSkill = asyncHandler(async (req: CustomRequest, res) => {
 
     req.user = user;
 
-    res.status(200).json({
+    res.status(201).json({
         message: "Skill removed successfully"
     });
 });
@@ -193,7 +193,7 @@ const makeRequest = asyncHandler(async (req: CustomRequest, res) => {
     await receiver.save();
     req.user = sender;
 
-    res.status(200).json({ message: "Request sent successfully" });
+    res.status(201).json({ message: "Request sent successfully" });
 });
 
 
@@ -242,7 +242,7 @@ const answerRequest = asyncHandler(async (req: CustomRequest, res) => {
     await sender.save();
     req.user = receiver;
 
-    res.status(200).json({ message: `Request ${decision === 'a' ? 'accepted' : 'rejected'}` });
+    res.status(201).json({ message: `Request ${decision === 'a' ? 'accepted' : 'rejected'}` });
 });
 
 
